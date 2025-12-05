@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Password Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="min-h-screen flex flex-col items-center p-4 sm:p-8">
+
+    <div class="w-full max-w-6xl space-y-8 relative">
+        
+        <div class="flex justify-between items-end border-b border-slate-700 pb-4">
+            <div>
+                <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">
+                    <i class="fa-solid fa-shield-halved mr-2"></i>PassVault
+                </h1>
+                <p class="text-slate-400 text-sm">Secure Credential Management System</p>
+            </div>
+            <button onclick="clearStorage()" class="text-xs text-red-400 hover:text-red-300 underline">Reset App</button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="glass-panel p-4 rounded-xl flex items-center justify-between">
+                <div>
+                    <p class="text-slate-400 text-xs uppercase font-bold tracking-wider">Total Stored</p>
+                    <h2 id="statTotal" class="text-3xl font-bold text-white">0</h2>
+                </div>
+                <div class="bg-blue-500/20 p-3 rounded-full text-blue-400"><i class="fa-solid fa-database text-xl"></i></div>
+            </div>
+            
+            <div class="glass-panel p-4 rounded-xl flex flex-col justify-between">
+                <div class="flex items-center justify-between mb-2">
+                    <div>
+                        <p class="text-slate-400 text-xs uppercase font-bold tracking-wider">Weak Passwords</p>
+                        <h2 id="statWeak" class="text-3xl font-bold text-yellow-500">0</h2>
+                    </div>
+                    <div class="bg-yellow-500/20 p-3 rounded-full text-yellow-400"><i class="fa-solid fa-triangle-exclamation text-xl"></i></div>
+                </div>
+                <button onclick="showWeakDetails()" class="text-xs w-full bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400 py-1 rounded transition">
+                    View Details
+                </button>
+            </div>
+            
+            <div class="glass-panel p-4 rounded-xl flex flex-col justify-between">
+                <div class="flex items-center justify-between mb-2">
+                    <div>
+                        <p class="text-slate-400 text-xs uppercase font-bold tracking-wider">Reused</p>
+                        <h2 id="statReused" class="text-3xl font-bold text-red-500">0</h2>
+                    </div>
+                    <div class="bg-red-500/20 p-3 rounded-full text-red-400"><i class="fa-solid fa-clone text-xl"></i></div>
+                </div>
+                <button onclick="showReusedDetails()" class="text-xs w-full bg-red-500/10 hover:bg-red-500/20 text-red-400 py-1 rounded transition">
+                    View Details
+                </button>
+            </div>
+        </div>
+
+        <div class="glass-panel rounded-xl p-6 relative">
+            <h3 class="text-lg font-semibold mb-4 text-blue-200" id="formTitle"><i class="fa-solid fa-plus mr-2"></i>Add New Credential</h3>
+            
+            <input type="hidden" id="editId" value="">
+
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
+                
+                <div class="md:col-span-3">
+                    <label class="block text-xs font-medium text-slate-400 mb-1">SERVICE</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-globe absolute left-3 top-3 text-slate-500"></i>
+                        <input type="text" id="serviceName" placeholder="e.g. Netflix" class="w-full bg-slate-800 border border-slate-600 text-white rounded-lg py-2 pl-10 pr-4 focus:outline-none focus:border-blue-500 transition-colors">
+                    </div>
+                </div>
+
+                <div class="md:col-span-3">
+                    <label class="block text-xs font-medium text-slate-400 mb-1">USERNAME</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-user absolute left-3 top-3 text-slate-500"></i>
+                        <input type="text" id="userName" placeholder="user@mail.com" class="w-full bg-slate-800 border border-slate-600 text-white rounded-lg py-2 pl-10 pr-4 focus:outline-none focus:border-blue-500 transition-colors">
+                    </div>
+                </div>
+
+                <div class="md:col-span-4">
+                    <label class="block text-xs font-medium text-slate-400 mb-1">PASSWORD</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-key absolute left-3 top-3 text-slate-500"></i>
+                        <input type="text" id="passwordInput" placeholder="Enter or Generate" class="w-full bg-slate-800 border border-slate-600 text-white rounded-lg py-2 pl-10 pr-4 focus:outline-none focus:border-blue-500 transition-colors">
+                    </div>
+                    <div class="w-full bg-slate-700 h-1.5 mt-2 rounded-full overflow-hidden">
+                        <div id="strengthBar" class="h-full transition-all duration-300 w-0"></div>
+                    </div>
+                    <div class="flex justify-between items-center mt-1">
+                        <p id="strengthText" class="text-[10px] text-slate-400">Strength check...</p>
+                        <div class="flex gap-2">
+                            <button onclick="generateNewPassword()" class="text-[10px] font-bold uppercase text-blue-400 hover:text-blue-300"><i class="fa-solid fa-bolt"></i> Generate</button>
+                            <span class="text-slate-600">|</span>
+                            <button onclick="suggestVariations()" class="text-[10px] font-bold uppercase text-purple-400 hover:text-purple-300"><i class="fa-solid fa-wand-sparkles"></i> Variate</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="md:col-span-2 pt-6 flex gap-2">
+                    <button onclick="savePassword()" id="saveBtn" class="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold py-2 px-4 rounded-lg shadow-lg active:scale-95 transition-all">
+                        SAVE
+                    </button>
+                    <button onclick="cancelEdit()" id="cancelBtn" class="hidden w-1/3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-panel rounded-xl overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-800 text-slate-400 text-xs uppercase tracking-wider">
+                            <th class="p-4 font-semibold">Service</th>
+                            <th class="p-4 font-semibold">Username</th>
+                            <th class="p-4 font-semibold">Password</th>
+                            <th class="p-4 font-semibold text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="passwordTableBody" class="divide-y divide-slate-700 text-sm"></tbody>
+                </table>
+            </div>
+            <div id="emptyState" class="hidden p-12 text-center text-slate-500">
+                <p>Vault is empty. Add a credential to start.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="infoModal" class="fixed inset-0 modal-bg hidden flex items-center justify-center z-50 p-4">
+        <div class="glass-panel w-full max-w-lg rounded-xl flex flex-col max-h-[80vh]">
+            <div class="p-4 border-b border-slate-700 flex justify-between items-center">
+                <h3 id="modalTitle" class="text-xl font-bold text-white">Details</h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div id="modalContent" class="p-4 overflow-y-auto space-y-4">
+            </div>
+            <div class="p-4 border-t border-slate-700 bg-slate-800/50 rounded-b-xl text-center">
+                <button onclick="closeModal()" class="text-sm text-slate-400 hover:text-white">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-800 text-white px-6 py-3 rounded-lg shadow-xl translate-y-24 transition-transform duration-300 border border-slate-700 flex items-center gap-3 z-50">
+        <i class="fa-solid fa-circle-check text-green-500"></i>
+        <span id="toastMsg">Action successful</span>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
